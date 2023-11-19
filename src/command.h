@@ -20,10 +20,32 @@ class SimpleCommand {
     std::vector<char *> execvp_args_; // Store C-style strings
 };
 
-class Command {
+class ICommand {
+    // Interface for all commands
   public:
-    void parse(Lexer &lexer);
-    int execute();
+    virtual int Parse(Lexer &lexer) = 0;
+    virtual int Execute() = 0;
+};
+
+enum class Builtins {
+    TOKEN_CD,
+};
+
+class BuiltinCommand : public ICommand {
+
+  public:
+    int Parse(Lexer &lexer);
+    int Execute();
+
+  private:
+    Builtins command_;
+    std::vector<std::string> arguments_;
+};
+
+class Command : public ICommand {
+  public:
+    int Parse(Lexer &lexer);
+    int Execute();
     ~Command();
 
   private:

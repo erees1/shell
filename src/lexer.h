@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
 #include <string>
+#include <vector>
 
 // Enum of tokens
 enum class Token {
@@ -11,15 +11,18 @@ enum class Token {
     TOKEN_REDIRECT_OUT,
     TOKEN_REDIRECT_APPEND,
     TOKEN_BACKGROUND,
+    TOKEN_CD,
 };
 
 std::ostream &operator<<(std::ostream &os, Token token);
 
 class Lexer {
-    public:
-        void lex(std::string line); 
-        std::vector<Token> tokens;
-        std::vector<std::string> words;
-    private:
-        Token matchToken(std::string token);
+  public:
+    void Lex(std::string line);
+    std::vector<Token> tokens;
+    std::vector<std::string> words;
+    bool HasBuiltins();
+
+  private:
+    Token MatchToken(std::string token);
 };

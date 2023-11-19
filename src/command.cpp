@@ -3,7 +3,7 @@
 #include <fcntl.h> // for open
 #include <iostream>
 #include <string>
-#include <unistd.h>
+#include <sys/stat.h>
 #include <unistd.h> // for close
 #include <vector>
 
@@ -56,7 +56,7 @@ void Command::AddSimpleCommand(SimpleCommand &simple_command) {
     simple_commands_.push_back(simple_command);
 }
 
-void Command::parse(Lexer &lexer) {
+int Command::Parse(Lexer &lexer) {
     std::vector<Token> tokens = lexer.tokens;
     std::vector<std::string> words = lexer.words;
 
@@ -106,9 +106,10 @@ void Command::parse(Lexer &lexer) {
         } // switch
     }     // for
     AddSimpleCommand(*current_command);
+    return 0;
 };
 
-int Command::execute() {
+int Command::Execute() {
     // This is the meat of the shell
     int tmpin = dup(0);
     int tmpout = dup(1);
@@ -174,3 +175,44 @@ int Command::execute() {
 
     return 0;
 } // execute
+
+bool IsDir(std::string dir) {
+    struct stat sb;
+    if (stat(dir.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode)) {
+        return true;
+    }
+    return false;
+}
+
+int BuiltinCommand::Parse(Lexer &lexer) {
+    if (lexer.tokens[0] == Token::TOKEN_CD) {
+        if (lexer.tokens.size() > 2) {
+            std::cerr << "cd: expected either 0 or 1 argument, got "
+                      << lexer.tokens.size() - 1 << std::endl;
+            return 1;
+        } else if (lexer.tokens.size() == 2) {
+            // One argument, go to that directory
+            std::string arg = lexer.words[0];
+            if (IsDir(arg)) {
+                arguments_.push_back(arg);
+            } else {
+                std::cerr << "cd: no such directory: " << arg << std::endl;
+                return 1;
+            }
+        }
+        command_ = Builtins::TOKEN_CD;
+    };
+    return 0;
+};
+int BuiltinCommand::Execute() {
+    int ret = 0;
+    if (command_ == Builtins::TOKEN_CD) {
+        if (arguments_.size() == 0) {
+            // No argument, go to home directory
+            ret = chdir(getenv("HOME"));
+        } else {
+            ret = chdir(&arguments_.back()[0]);
+        }
+    };
+    return ret;
+};

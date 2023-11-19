@@ -2,14 +2,14 @@
 #include <iostream>
 #include <string>
 
-void Lexer::lex(std::string line) {
+void Lexer::Lex(std::string line) {
     std::string buffer;
     char c;
 
     for (int i = 0; i < line.length(); i++) {
         c = line[i];
         if (c == ' ') {
-            Token token = matchToken(buffer);
+            Token token = MatchToken(buffer);
             if (token == Token::TOKEN_WORD) {
                 words.push_back(buffer);
             }
@@ -20,14 +20,14 @@ void Lexer::lex(std::string line) {
         }
     }
     // Push the last token
-    Token token = matchToken(buffer);
+    Token token = MatchToken(buffer);
     tokens.push_back(token);
-        if (token == Token::TOKEN_WORD) {
-            words.push_back(buffer);
-        }
+    if (token == Token::TOKEN_WORD) {
+        words.push_back(buffer);
+    }
 }
 
-Token Lexer::matchToken(std::string token) {
+ Token Lexer::MatchToken(std::string token) {
     if (token == "|") {
         return Token::TOKEN_PIPE;
     } else if (token == "<") {
@@ -38,9 +38,20 @@ Token Lexer::matchToken(std::string token) {
         return Token::TOKEN_REDIRECT_APPEND;
     } else if (token == "&") {
         return Token::TOKEN_BACKGROUND;
+    } else if (token == "cd") {
+        return Token::TOKEN_CD;
     } else {
         return Token::TOKEN_WORD;
     }
+}
+
+bool Lexer::HasBuiltins() {
+    for (int i = 0; i < tokens.size(); i++) {
+        if (tokens[i] == Token::TOKEN_CD) {
+            return true;
+        }
+    }
+    return false;
 }
 
 std::ostream &operator<<(std::ostream &os, Token token) {
@@ -62,6 +73,9 @@ std::ostream &operator<<(std::ostream &os, Token token) {
         break;
     case Token::TOKEN_BACKGROUND:
         os << "BACKGROUND";
+        break;
+    case Token::TOKEN_CD:
+        os << "CD";
         break;
     }
     return os;

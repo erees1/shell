@@ -7,18 +7,26 @@ void Shell::Loop() {
     while (1) {
         std::cout << "shell> ";
         std::string line = ReadLine();
-        Lexer lexer = Lexer();
-
-        lexer.lex(line);
-
-        Command command = Command();
-        command.parse(lexer);
-        command.execute();
-
-        /* delete &command; */
-        /* delete &lexer; */
+        Lexer lexer;
+        lexer.Lex(line);
+        if (lexer.HasBuiltins()) {
+            BuiltinCommand builtin_command;
+            ParseAndExecute(builtin_command, lexer);
+        } else {
+            Command command;
+            ParseAndExecute(command, lexer);
+        }
     }
 }
+
+int Shell::ParseAndExecute(ICommand &command, Lexer &lexer) {
+    int ret = command.Parse(lexer);
+    if (ret != 0) {
+        return ret;
+    }
+    ret = command.Execute();
+    return ret;
+};
 
 std::string Shell::ReadLine() {
     std::string buffer;

@@ -2,7 +2,9 @@
 
 A simple shell implemented in cpp.
 
-I've only implemented a very limited subset of functionality, atm basically just pipes and file redirection.
+I've only implemented a very limited subset of functionality, atm basically just `cd`, pipes and file redirection.
+
+Quit with `^C`.
 
 
 To compile
