@@ -54,6 +54,11 @@ bool Lexer::HasBuiltins() {
     return false;
 }
 
+void Lexer::Clear() {
+    tokens.clear();
+    words.clear();
+}
+
 std::ostream &operator<<(std::ostream &os, Token token) {
     switch (token) {
     case Token::TOKEN_WORD:

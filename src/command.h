@@ -11,9 +11,9 @@ class SimpleCommand {
     char *filepath();
     void AddArgument(std::string argument);
     std::string input_file;
+    int number_of_arguments;
 
   private:
-    int number_of_arguments_;
     std::vector<std::string> args_;
     std::string filepath_;
     std::string filename_;
@@ -46,7 +46,6 @@ class Command : public ICommand {
   public:
     int Parse(Lexer &lexer);
     int Execute();
-    ~Command();
 
   private:
     std::vector<SimpleCommand> simple_commands_;

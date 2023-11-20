@@ -22,6 +22,7 @@ class Lexer {
     std::vector<Token> tokens;
     std::vector<std::string> words;
     bool HasBuiltins();
+    void Clear();
 
   private:
     Token MatchToken(std::string token);

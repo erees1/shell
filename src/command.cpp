@@ -23,34 +23,32 @@ std::string getFilenameFromPath(const std::string &path) {
 void SimpleCommand::AddArgument(std::string argument) {
     args_.push_back(argument); // Add the argument to args vector
     // For the first argument (command), set filepath and add to c_args
-    if (this->number_of_arguments_ == 0) {
-        filepath_ = argument;
-        filename_ = getFilenameFromPath(args_.back()); // Get the filename
-        execvp_args_.push_back(&filename_[0]); // Add the command to c_args
-    } else {
-        // For subsequent arguments, just add their pointers to c_args
-        execvp_args_.push_back(&args_.back()[0]);
-    }
-    this->number_of_arguments_++;
+    this->number_of_arguments++;
 }
 
 char **SimpleCommand::args_pointer_array() {
-    // Add a nullptr to the end of c_args
+    for (int i = 0; i < args_.size(); i++) {
+        if (i == 0) {
+            filepath_ = args_[i];
+            filename_ = getFilenameFromPath(filepath_);
+            execvp_args_.push_back(&filename_[0]);
+        } else {
+            execvp_args_.push_back(&args_[i][0]);
+        }
+    }
     execvp_args_.push_back(nullptr);
     return execvp_args_.data();
-}
-char *SimpleCommand::filepath() {
-    // Add a nullptr to the end of c_args
-    return &filepath_[0];
-}
-
-Command::~Command(){
-    // TODO this is causing a segfault
-    // Delete all the SimpleCommands
-    /* for (int i = 0; i < simple_commands_.size(); i++) { */
-    /*     delete &simple_commands_[i]; */
-    /* } */
 };
+
+char *SimpleCommand::filepath() { return &filepath_[0]; }
+
+std::ostream &operator<<(std::ostream &os, SimpleCommand simple_command) {
+    char **args = simple_command.args_pointer_array();
+    for (int i = 0; args[i] != nullptr; i++) {
+        std::cout << args[i] << " ";
+    }
+    return os;
+}
 
 void Command::AddSimpleCommand(SimpleCommand &simple_command) {
     simple_commands_.push_back(simple_command);
@@ -61,20 +59,21 @@ int Command::Parse(Lexer &lexer) {
     std::vector<std::string> words = lexer.words;
 
     int wordIndex = 0;
-    SimpleCommand *current_command = new SimpleCommand();
+    SimpleCommand current_command = SimpleCommand();
     for (int i = 0; i < tokens.size(); i++) {
 
         Token token = tokens[i];
         switch (token) {
         case Token::TOKEN_WORD: {
-            current_command->AddArgument(words[wordIndex]);
+            std::string word = words[wordIndex];
+            current_command.AddArgument(word);
             wordIndex++;
             break;
         }
         case Token::TOKEN_REDIRECT_IN: {
             // print word index
             input_file_ = words[wordIndex];
-            current_command->input_file = input_file_;
+            current_command.input_file = input_file_;
             wordIndex++;
             i++; // Skip the next word
             break;
@@ -96,8 +95,8 @@ int Command::Parse(Lexer &lexer) {
             break;
         }
         case Token::TOKEN_PIPE: {
-            AddSimpleCommand(*current_command);
-            current_command = new SimpleCommand();
+            AddSimpleCommand(current_command);
+            current_command = SimpleCommand();
             break;
         }
         default: {
@@ -105,7 +104,9 @@ int Command::Parse(Lexer &lexer) {
         }
         } // switch
     }     // for
-    AddSimpleCommand(*current_command);
+    if (current_command.number_of_arguments > 0) {
+        AddSimpleCommand(current_command);
+    }
     return 0;
 };
 

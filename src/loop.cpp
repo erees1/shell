@@ -4,10 +4,10 @@
 #include <iostream>
 
 void Shell::Loop() {
-    while (1) {
+    Lexer lexer;
+    while (true) {
         std::cout << "shell> ";
         std::string line = ReadLine();
-        Lexer lexer;
         lexer.Lex(line);
         if (lexer.HasBuiltins()) {
             BuiltinCommand builtin_command;
@@ -16,6 +16,8 @@ void Shell::Loop() {
             Command command;
             ParseAndExecute(command, lexer);
         }
+        
+        lexer.Clear(); 
     }
 }
 
