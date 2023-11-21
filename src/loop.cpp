@@ -44,6 +44,10 @@ std::string Shell::ReadLine() {
             buffer += c;
         }
     }
-
+    // Handle the case where the user hits ctrl-d to exit the shell.
+    if (c == EOF && buffer.empty()) {
+        std::cout << std::endl;
+        exit(0);
+    }
     return buffer;
 }
