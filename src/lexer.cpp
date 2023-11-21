@@ -10,9 +10,6 @@ void Lexer::Lex(std::string line) {
         c = line[i];
         if (c == ' ') {
             Token token = MatchToken(buffer);
-            if (token == Token::TOKEN_WORD) {
-                words.push_back(buffer);
-            }
             tokens.push_back(token);
             buffer = "";
         } else {
@@ -22,32 +19,29 @@ void Lexer::Lex(std::string line) {
     // Push the last token
     Token token = MatchToken(buffer);
     tokens.push_back(token);
-    if (token == Token::TOKEN_WORD) {
-        words.push_back(buffer);
-    }
 }
 
- Token Lexer::MatchToken(std::string token) {
+Token Lexer::MatchToken(std::string token) {
     if (token == "|") {
-        return Token::TOKEN_PIPE;
+        return Token(Token::Type::PIPE, token);
     } else if (token == "<") {
-        return Token::TOKEN_REDIRECT_IN;
+        return Token(Token::Type::REDIRECT_IN, token);
     } else if (token == ">") {
-        return Token::TOKEN_REDIRECT_OUT;
+        return Token(Token::Type::REDIRECT_OUT, token);
     } else if (token == ">>") {
-        return Token::TOKEN_REDIRECT_APPEND;
+        return Token(Token::Type::REDIRECT_APPEND, token);
     } else if (token == "&") {
-        return Token::TOKEN_BACKGROUND;
+        return Token(Token::Type::BACKGROUND, token);
     } else if (token == "cd") {
-        return Token::TOKEN_CD;
+        return Token(Token::Type::CD, token);
     } else {
-        return Token::TOKEN_WORD;
+        return Token(Token::Type::WORD, token);
     }
 }
 
 bool Lexer::HasBuiltins() {
     for (int i = 0; i < tokens.size(); i++) {
-        if (tokens[i] == Token::TOKEN_CD) {
+        if (tokens[i].GetType() == Token::Type::CD) {
             return true;
         }
     }
@@ -56,32 +50,4 @@ bool Lexer::HasBuiltins() {
 
 void Lexer::Clear() {
     tokens.clear();
-    words.clear();
-}
-
-std::ostream &operator<<(std::ostream &os, Token token) {
-    switch (token) {
-    case Token::TOKEN_WORD:
-        os << "WORD";
-        break;
-    case Token::TOKEN_PIPE:
-        os << "PIPE";
-        break;
-    case Token::TOKEN_REDIRECT_IN:
-        os << "REDIRECT_IN";
-        break;
-    case Token::TOKEN_REDIRECT_OUT:
-        os << "REDIRECT_OUT";
-        break;
-    case Token::TOKEN_REDIRECT_APPEND:
-        os << "REDIRECT_APPEND";
-        break;
-    case Token::TOKEN_BACKGROUND:
-        os << "BACKGROUND";
-        break;
-    case Token::TOKEN_CD:
-        os << "CD";
-        break;
-    }
-    return os;
 }
