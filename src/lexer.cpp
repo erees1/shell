@@ -39,15 +39,6 @@ Token Lexer::MatchToken(std::string token) {
     }
 }
 
-bool Lexer::HasBuiltins() {
-    for (int i = 0; i < tokens.size(); i++) {
-        if (tokens[i].GetType() == Token::Type::CD) {
-            return true;
-        }
-    }
-    return false;
-}
-
 void Lexer::Clear() {
     tokens.clear();
 }

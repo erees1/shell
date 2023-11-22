@@ -20,10 +20,9 @@ std::string getFilenameFromPath(const std::string &path) {
     }
 }
 
-void SimpleCommand::AddArgument(std::string argument) {
+int SimpleCommand::AddArgument(std::string argument) {
     args_.push_back(argument); // Add the argument to args vector
-    // For the first argument (command), set filepath and add to c_args
-    this->number_of_arguments++;
+    return 0;
 }
 
 char **SimpleCommand::args_pointer_array() {
@@ -42,15 +41,28 @@ char **SimpleCommand::args_pointer_array() {
 
 char *SimpleCommand::filepath() { return &filepath_[0]; }
 
-std::ostream &operator<<(std::ostream &os, SimpleCommand simple_command) {
-    char **args = simple_command.args_pointer_array();
-    for (int i = 0; args[i] != nullptr; i++) {
-        std::cout << args[i] << " ";
-    }
-    return os;
-}
+int SimpleCommand::Execute(int fdin, int fdout) {
+    dup2(fdin, 0); // Set fdin to be stdin of the next command
+    close(fdin);
 
-void Command::AddSimpleCommand(SimpleCommand &simple_command) {
+    dup2(fdout, 1);
+    close(fdout);
+
+    int ret = fork();
+    if (ret == 0) {
+        // child
+        execvp(this->filepath(), this->args_pointer_array());
+        perror("execvp");
+    } else if (ret < 0) {
+        // parent
+        perror("fork failed");
+        _exit(1);
+        ;
+    }
+    return ret;
+};
+
+void Command::AddSimpleCommand(ICommand *simple_command) {
     simple_commands_.push_back(simple_command);
 }
 
@@ -58,21 +70,20 @@ int Command::Parse(Lexer &lexer) {
     std::vector<Token> tokens = lexer.tokens;
 
     int wordIndex = 0;
-    SimpleCommand current_command = SimpleCommand();
+    ICommand *current_command = new SimpleCommand();
     for (int i = 0; i < tokens.size(); i++) {
 
         Token token = tokens[i];
         Token::Type token_type = token.GetType();
         switch (token_type) {
         case Token::Type::WORD: {
-            current_command.AddArgument(token.GetValue());
+            current_command->AddArgument(token.GetValue());
             wordIndex++;
             break;
         }
         case Token::Type::REDIRECT_IN: {
             // print word index
-            input_file_ = tokens[i + 1].GetValue();
-            current_command.input_file = input_file_;
+            current_command->set_input_file(tokens[i + 1].GetValue());
             i++; // Skip the next word
             break;
         }
@@ -93,40 +104,42 @@ int Command::Parse(Lexer &lexer) {
         }
         case Token::Type::PIPE: {
             AddSimpleCommand(current_command);
-            current_command = SimpleCommand();
+            current_command = new SimpleCommand();
             break;
         }
-        default: {
+        case Token::Type::CD: {
+            current_command = new CdCommand();
             break;
         }
         } // switch
     }     // for
-    if (current_command.number_of_arguments > 0) {
+    if (current_command->number_of_arguments() > 0) {
         AddSimpleCommand(current_command);
     }
     return 0;
 };
 
+Command::~Command() {
+    for (ICommand* cmd : simple_commands_) {
+        delete cmd;
+    }
+}
+
 int Command::Execute() {
-    // This is the meat of the shell
+    // Save stdin and stdout as we need to restore it later
     int tmpin = dup(0);
     int tmpout = dup(1);
-    int fdin;
-    int fdout;
-    int ret;
 
-    fdin = dup(tmpin);
+    int fdin;      // File descriptor for input of the next command
+    int next_fdin; // File descriptor for input of the next command
+    int fdout;     // File descriptor for output of the next command
+    int ret;       // Return value of fork()
+
+    next_fdin = dup(tmpin);
     for (int i = 0; i < simple_commands_.size(); i++) {
-        SimpleCommand simple_command = simple_commands_[i];
+        fdin = next_fdin;
 
-        if (i == 0) {
-            // First command
-            if (!input_file_.empty()) {
-                fdin = open(&input_file_[0], O_RDONLY);
-            }
-        }
-        dup2(fdin, 0);
-        close(fdin);
+        ICommand *simple_command = simple_commands_[i];
 
         if (i == simple_commands_.size() - 1) {
             // Last command
@@ -140,25 +153,11 @@ int Command::Execute() {
             // Not last command so setup pipes
             int fdpipe[2];
             pipe(fdpipe);
-            fdin = fdpipe[0];
-            fdout = fdpipe[1];
+            next_fdin = fdpipe[0]; // Input for the next command
+            fdout = fdpipe[1];     // Output for the current command
         }
+        ret = simple_command->Execute(fdin, fdout);
 
-        dup2(fdout, 1);
-        close(fdout);
-
-        ret = fork();
-        if (ret == 0) {
-            // child
-            execvp(simple_command.filepath(),
-                   simple_command.args_pointer_array());
-            perror("execvp");
-        } else if (ret < 0) {
-            // parent
-            perror("fork failed");
-            _exit(1);
-            ;
-        }
     } // for
 
     dup2(tmpin, 0);
@@ -182,35 +181,31 @@ bool IsDir(std::string dir) {
     return false;
 }
 
-int BuiltinCommand::Parse(Lexer &lexer) {
-    if (lexer.tokens[0].GetType() == Token::Type::CD) {
-        if (lexer.tokens.size() > 2) {
-            std::cerr << "cd: expected either 0 or 1 argument, got "
-                      << lexer.tokens.size() - 1 << std::endl;
+int CdCommand::AddArgument(std::string argument) {
+
+    if (number_of_arguments() == 1) {
+        std::cerr << "cd: expected either 0 or 1 argument, got "
+                  << number_of_arguments() - 1 << std::endl;
+        return 1;
+    } else {
+        // One argument, go to that directory
+        if (IsDir(argument)) {
+            argument_ = argument;
+        } else {
+            std::cerr << "cd: no such directory: " << argument << std::endl;
             return 1;
-        } else if (lexer.tokens.size() == 2) {
-            // One argument, go to that directory
-            std::string arg = lexer.tokens[1].GetValue();
-            if (IsDir(arg)) {
-                arguments_.push_back(arg);
-            } else {
-                std::cerr << "cd: no such directory: " << arg << std::endl;
-                return 1;
-            }
         }
-        command_ = Builtins::TOKEN_CD;
-    };
+    }
     return 0;
 };
-int BuiltinCommand::Execute() {
+
+int CdCommand::Execute(int fdin, int fdout) {
     int ret = 0;
-    if (command_ == Builtins::TOKEN_CD) {
-        if (arguments_.size() == 0) {
-            // No argument, go to home directory
-            ret = chdir(getenv("HOME"));
-        } else {
-            ret = chdir(&arguments_.back()[0]);
-        }
-    };
-    return ret;
+    if (argument_.empty()) {
+        // No argument, go to home directory
+        ret = chdir(getenv("HOME"));
+    } else {
+        ret = chdir(&argument_[0]);
+    }
+    return 0;
 };

@@ -49,7 +49,6 @@ class Lexer {
   public:
     void Lex(std::string line);
     std::vector<Token> tokens;
-    bool HasBuiltins();
     void Clear();
 
   private:
