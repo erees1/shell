@@ -17,8 +17,10 @@ void Lexer::Lex(std::string line) {
         }
     }
     // Push the last token
-    Token token = MatchToken(buffer);
-    tokens.push_back(token);
+    if (buffer != "") {
+        Token token = MatchToken(buffer);
+        tokens.push_back(token);
+    }
 }
 
 Token Lexer::MatchToken(std::string token) {
