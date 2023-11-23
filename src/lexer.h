@@ -49,7 +49,7 @@ class Lexer {
   public:
     void Lex(std::string line);
     std::vector<Token> tokens;
-    void Clear();
+    void Clear() { tokens.clear(); }
 
   private:
     Token MatchToken(std::string token);

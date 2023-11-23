@@ -41,6 +41,3 @@ Token Lexer::MatchToken(std::string token) {
     }
 }
 
-void Lexer::Clear() {
-    tokens.clear();
-}
