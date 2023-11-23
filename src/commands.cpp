@@ -1,5 +1,6 @@
 #include "commands.h"
 #include <iostream>
+#include <sys/fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -17,6 +18,11 @@ std::string GetFilenameFromPath(const std::string &path) {
 }
 
 int ForkingCommand::AddArgument(std::string argument) {
+    if (args_.size() == 0) {
+        // The first argument is the filepath
+        filepath_ = argument;
+        filename_ = GetFilenameFromPath(filepath_);
+    }
     args_.push_back(argument); // Add the argument to args vector
     return 0;
 }
@@ -24,8 +30,6 @@ int ForkingCommand::AddArgument(std::string argument) {
 char **ForkingCommand::args_pointer_array() {
     for (int i = 0; i < args_.size(); i++) {
         if (i == 0) {
-            filepath_ = args_[i];
-            filename_ = GetFilenameFromPath(filepath_);
             execvp_args_.push_back(&filename_[0]);
         } else {
             execvp_args_.push_back(&args_[i][0]);
@@ -36,11 +40,20 @@ char **ForkingCommand::args_pointer_array() {
 };
 
 int ForkingCommand::Execute(int fdin, int fdout) {
-    dup2(fdin, 0); // Set fdin to be stdin of the next command
-    close(fdin);
+    // As we will modify stdin and stdout to be fdin and fdout, before forking
+    // we need to save the original stdin and stdout so that we can restore them
+    int tmpin = dup(0);
+    int tmpout = dup(1);
 
-    dup2(fdout, 1);
-    close(fdout);
+    // If fdin is provided and input_file_ is not empty, then fdin is ignored
+    if (fdin != 0) {
+        dup2(fdin, 0);
+        close(fdin);
+    }
+    if (fdout != 1) {
+        dup2(fdout, 1);
+        close(fdout);
+    }
 
     int ret = fork();
     if (ret == 0) {
@@ -53,6 +66,11 @@ int ForkingCommand::Execute(int fdin, int fdout) {
         _exit(1);
         ;
     }
+
+    dup2(tmpin, 0);
+    dup2(tmpout, 1);
+    close(tmpin);
+    close(tmpout);
     return ret;
 };
 

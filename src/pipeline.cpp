@@ -11,37 +11,66 @@ void CommandPipeline::AddSimpleCommand(CommandInterface *simple_command) {
     simple_commands_.push_back(simple_command);
 }
 
+int CheckToken(std::vector<Token> &tokens, int i) {
+
+    std::cout << "check token vecotr size" << tokens.size() << std::endl;
+    std::cout << tokens[i].GetValue() << std::endl;
+    if (i >= tokens.size()) {
+        std::cerr << "syntax error: missing argument after redirect"
+                  << std::endl;
+        return -1; // or some other error code
+    }
+    return 1;
+}
+
 int CommandPipeline::Parse(Lexer &lexer) {
     std::vector<Token> tokens = lexer.tokens;
 
-    int wordIndex = 0;
-    CommandInterface *current_command = new ForkingCommand();
+    CommandInterface *current_command = nullptr;
     for (int i = 0; i < tokens.size(); i++) {
 
         Token token = tokens[i];
         Token::Type token_type = token.GetType();
+
         switch (token_type) {
         case Token::Type::WORD: {
+            if (current_command == nullptr) {
+                current_command = new ForkingCommand();
+                AddSimpleCommand(current_command);
+            }
+            std::cout << "word: " << token.GetValue() << std::endl;
             int ret = current_command->AddArgument(token.GetValue());
             if (ret != 0) {
                 return ret;
             }
-            wordIndex++;
             break;
         }
         case Token::Type::REDIRECT_IN: {
             // print word index
-            current_command->set_input_file(tokens[i + 1].GetValue());
+            if (CheckToken(tokens, i + 1) == -1) {
+                return -1;
+            }
+            in_file_ = tokens[i + 1].GetValue();
+            // only allow this for the first command
+            if (simple_commands_.size() > 1) {
+                std::cerr << "ambiguous input redirect" << std::endl;
+                return -1;
+            }
             i++; // Skip the next word
             break;
         }
         case Token::Type::REDIRECT_OUT: {
+            if (CheckToken(tokens, i + 1) == -1) {
+                return -1;
+            }
             out_file_ = tokens[i + 1].GetValue();
-            wordIndex++;
             i++; // Skip the next word
             break;
         }
         case Token::Type::REDIRECT_APPEND: {
+            if (CheckToken(tokens, i + 1) == -1) {
+                return -1;
+            }
             out_file_ = tokens[i + 1].GetValue();
             i++; // Skip the next word
             break;
@@ -51,19 +80,25 @@ int CommandPipeline::Parse(Lexer &lexer) {
             break;
         }
         case Token::Type::PIPE: {
-            AddSimpleCommand(current_command);
-            current_command = new ForkingCommand();
+            if (current_command == nullptr) {
+                std::cerr << "invalid syntax" << std::endl;
+                return -1;
+            }
+            current_command = nullptr;
             break;
         }
         case Token::Type::CD: {
+            if (current_command != nullptr) {
+                std::cerr << "invalid syntax" << std::endl;
+                return -1;
+            }
             current_command = new CdCommand();
+            AddSimpleCommand(current_command);
             break;
         }
         } // switch
-    }     // for
-    if (!current_command->IsEmpty()) {
-        AddSimpleCommand(current_command);
-    }
+
+    } // for
     return 0;
 };
 
@@ -74,28 +109,21 @@ CommandPipeline::~CommandPipeline() {
 }
 
 int CommandPipeline::Execute() {
-    // Save stdin and stdout as we need to restore it later
-    int tmpin = dup(0);
-    int tmpout = dup(1);
+    int fdin = 0;      // File descriptor for input of the next command
+    int next_fdin = 0; // File descriptor for input of the next command
+    int fdout = 1;     // File descriptor for output of the next command
+    int ret;           // Return value of fork()
 
-    int fdin;      // File descriptor for input of the next command
-    int next_fdin; // File descriptor for input of the next command
-    int fdout;     // File descriptor for output of the next command
-    int ret;       // Return value of fork()
-
-    next_fdin = dup(tmpin);
     for (int i = 0; i < simple_commands_.size(); i++) {
         fdin = next_fdin;
-
         CommandInterface *simple_command = simple_commands_[i];
 
         if (i == simple_commands_.size() - 1) {
-            // Last command
+            // Last command so setup output file if specified
             if (!out_file_.empty()) {
                 fdout = open(&out_file_[0], O_WRONLY | O_CREAT | O_TRUNC, 0666);
             } else {
-                // Use default output
-                fdout = dup(tmpout);
+                fdout = 1;
             }
         } else {
             // Not last command so setup pipes
@@ -104,14 +132,13 @@ int CommandPipeline::Execute() {
             next_fdin = fdpipe[0]; // Input for the next command
             fdout = fdpipe[1];     // Output for the current command
         }
+
+        if (i == 0 && !in_file_.empty()) {
+            fdin = open(&in_file_[0], O_RDONLY);
+        }
         ret = simple_command->Execute(fdin, fdout);
 
     } // for
-
-    dup2(tmpin, 0);
-    dup2(tmpout, 1);
-    close(tmpin);
-    close(tmpout);
 
     if (background_ == 0) {
         // Wait for last process to finish

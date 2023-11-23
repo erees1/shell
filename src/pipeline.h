@@ -18,6 +18,7 @@ class CommandPipeline {
   private:
     std::vector<CommandInterface *> simple_commands_;
     std::string out_file_;
+    std::string in_file_;
     std::string err_file_;
     int background_;
     void AddSimpleCommand(CommandInterface *simple_command);
