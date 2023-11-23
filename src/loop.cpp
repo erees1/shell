@@ -1,6 +1,6 @@
 #include "loop.h"
-#include "command.h"
 #include "lexer.h"
+#include "pipeline.h"
 #include <iostream>
 
 void Shell::Loop() {
@@ -9,18 +9,18 @@ void Shell::Loop() {
         std::cout << "shell> ";
         std::string line = ReadLine();
         lexer.Lex(line);
-        Command command;
-        ParseAndExecute(command, lexer);
+        CommandPipeline command_pipeline;
+        ParseAndExecute(command_pipeline, lexer);
         lexer.Clear();
     }
 }
 
-int Shell::ParseAndExecute(Command &command, Lexer &lexer) {
-    int ret = command.Parse(lexer);
+int Shell::ParseAndExecute(CommandPipeline &command_pipeline, Lexer &lexer) {
+    int ret = command_pipeline.Parse(lexer);
     if (ret != 0) {
         return ret;
     }
-    ret = command.Execute();
+    ret = command_pipeline.Execute();
     return ret;
 };
 

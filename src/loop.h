@@ -1,11 +1,11 @@
 #pragma once
 
-#include "command.h"
+#include "pipeline.h"
 #include <string>
 
 class Shell {
   public:
     void Loop();
     std::string ReadLine();
-    int ParseAndExecute(Command &command, Lexer &lexer);
+    int ParseAndExecute(CommandPipeline &command, Lexer &lexer);
 };
