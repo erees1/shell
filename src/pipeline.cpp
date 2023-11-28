@@ -12,9 +12,6 @@ void CommandPipeline::AddSimpleCommand(CommandInterface *simple_command) {
 }
 
 int CheckToken(std::vector<Token> &tokens, int i) {
-
-    std::cout << "check token vecotr size" << tokens.size() << std::endl;
-    std::cout << tokens[i].GetValue() << std::endl;
     if (i >= tokens.size()) {
         std::cerr << "syntax error: missing argument after redirect"
                   << std::endl;
@@ -38,7 +35,6 @@ int CommandPipeline::Parse(Lexer &lexer) {
                 current_command = new ForkingCommand();
                 AddSimpleCommand(current_command);
             }
-            std::cout << "word: " << token.GetValue() << std::endl;
             int ret = current_command->AddArgument(token.GetValue());
             if (ret != 0) {
                 return ret;
@@ -72,6 +68,7 @@ int CommandPipeline::Parse(Lexer &lexer) {
                 return -1;
             }
             out_file_ = tokens[i + 1].GetValue();
+            append_out_ = true;
             i++; // Skip the next word
             break;
         }
@@ -121,7 +118,14 @@ int CommandPipeline::Execute() {
         if (i == simple_commands_.size() - 1) {
             // Last command so setup output file if specified
             if (!out_file_.empty()) {
-                fdout = open(&out_file_[0], O_WRONLY | O_CREAT | O_TRUNC, 0666);
+                if (append_out_) {
+                    std::cout << "append out true" << std::endl;
+                    fdout = open(&out_file_[0],
+                                 O_WRONLY | O_CREAT | O_APPEND, 0666);
+                } else {
+                    fdout =
+                        open(&out_file_[0], O_WRONLY | O_CREAT | O_TRUNC, 0666);
+                }
             } else {
                 fdout = 1;
             }
