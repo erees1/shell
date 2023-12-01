@@ -35,7 +35,15 @@ int CommandPipeline::Parse(const std::vector<Token> &tokens) {
                 current_command = new ForkingCommand();
                 AddSimpleCommand(current_command);
             }
-            int ret = current_command->AddArgument(token.GetValue());
+            // If ~ in the argument then expand it
+            std::string value = token.GetValue();
+            if (token.GetValue().find("~") != std::string::npos) {
+                std::string home = getenv("HOME");
+                std::string original = token.GetValue();
+                value =
+                    original.replace(original.find("~"), 1, home);
+            }
+            int ret = current_command->AddArgument(value);
             if (ret != 0) {
                 return ret;
             }
