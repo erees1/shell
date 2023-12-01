@@ -2,9 +2,25 @@
 
 A simple shell implemented in cpp.
 
-I've only implemented a limited subset of functionality, atm basically just `cd`, pipes and file redirection.
+I've only implemented a limited subset of functionality:
+- `cd` to change directory
+- `|` to pipe output of one command to another
+- `>` to redirect output of one command to a file
+- `<` to redirect input of one command to a file
+- `>>` to append output of one command to a file
+- `&` to run a command in the background. (`fg` to bring it back to the foreground not yet implmented)
+- `~` expands to $HOME
+- `ctrl-c` sends SIGINT to the child processes
 
-Quit with `^C` or `^D` (I've not implemented passing SIGINT to child processes yet).
+Notable omissions:
+- `;` to run multiple commands in sequence
+- `&&` and `||` to run commands conditionally
+- globbing
+- `*` and `?` expansion
+- quotes and escaping (everything is assumed to be whitespace separated)
+
+
+Quit with `^D`.
 
 
 To compile
