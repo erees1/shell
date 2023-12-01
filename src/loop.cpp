@@ -4,24 +4,22 @@
 #include <iostream>
 
 void Shell::Loop() {
-    Lexer lexer;
     while (true) {
         std::cout << "shell> ";
         std::string line = ReadLine();
-        lexer.Lex(line);
-        CommandPipeline command_pipeline;
-        ParseAndExecute(command_pipeline, lexer);
-        lexer.Clear();
+        lexer_->Lex(line);
+        ParseTokensAndExecute(lexer_->tokens);
+        lexer_->Clear();
     }
 }
 
-int Shell::ParseAndExecute(CommandPipeline &command_pipeline, Lexer &lexer) {
-    int ret = command_pipeline.Parse(lexer);
+int Shell::ParseTokensAndExecute(const std::vector<Token> &tokens) {
+    CommandPipeline command_pipeline;
+    int ret = command_pipeline.Parse(tokens);
     if (ret != 0) {
         return ret;
     }
-    ret = command_pipeline.Execute();
-    return ret;
+    return command_pipeline.Execute();
 };
 
 std::string Shell::ReadLine() {

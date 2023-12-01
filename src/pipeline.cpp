@@ -11,7 +11,7 @@ void CommandPipeline::AddSimpleCommand(CommandInterface *simple_command) {
     simple_commands_.push_back(simple_command);
 }
 
-int CheckToken(std::vector<Token> &tokens, int i) {
+int CheckToken(const std::vector<Token> &tokens, int i) {
     if (i >= tokens.size()) {
         std::cerr << "syntax error: missing argument after redirect"
                   << std::endl;
@@ -20,8 +20,7 @@ int CheckToken(std::vector<Token> &tokens, int i) {
     return 1;
 }
 
-int CommandPipeline::Parse(Lexer &lexer) {
-    std::vector<Token> tokens = lexer.tokens;
+int CommandPipeline::Parse(const std::vector<Token> &tokens) {
 
     CommandInterface *current_command = nullptr;
     for (int i = 0; i < tokens.size(); i++) {

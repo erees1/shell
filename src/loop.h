@@ -6,6 +6,11 @@
 class Shell {
   public:
     void Loop();
+    Shell() { lexer_ = new Lexer(); }
+    ~Shell() { delete lexer_; }
+
+  private:
+    Lexer *lexer_;
     std::string ReadLine();
-    int ParseAndExecute(CommandPipeline &command, Lexer &lexer);
+    int ParseTokensAndExecute(const std::vector<Token> &tokens);
 };

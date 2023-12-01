@@ -11,7 +11,7 @@ class CommandPipeline {
     // Composite command handles a complete line entered into the shell
     // This may or may not contain pipes
   public:
-    int Parse(Lexer &lexer);
+    int Parse(const std::vector<Token> &tokens);
     int Execute();
     ~CommandPipeline();
 
