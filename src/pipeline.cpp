@@ -73,7 +73,7 @@ int CommandPipeline::Parse(Lexer &lexer) {
             break;
         }
         case Token::Type::BACKGROUND: {
-            background_ = 1;
+            background_ = true;
             break;
         }
         case Token::Type::PIPE: {
@@ -109,7 +109,7 @@ int CommandPipeline::Execute() {
     int fdin = 0;      // File descriptor for input of the next command
     int next_fdin = 0; // File descriptor for input of the next command
     int fdout = 1;     // File descriptor for output of the next command
-    int ret;           // Return value of fork()
+    std::vector<int> pids;
 
     for (int i = 0; i < simple_commands_.size(); i++) {
         fdin = next_fdin;
@@ -140,13 +140,19 @@ int CommandPipeline::Execute() {
         if (i == 0 && !in_file_.empty()) {
             fdin = open(&in_file_[0], O_RDONLY);
         }
-        ret = simple_command->Execute(fdin, fdout);
+        int ret = simple_command->Execute(fdin, fdout);
+        if (ret != 0) {
+            pids.push_back(ret);
+        }
 
     } // for
 
-    if (background_ == 0) {
+    if (!background_) {
         // Wait for last process to finish
-        waitpid(ret, NULL, 0);
+        for (int pid : pids) {
+            waitpid(pid, NULL, 0);
+        }
+        // Wait for last process to finish
     }
 
     return 0;

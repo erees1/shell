@@ -21,6 +21,6 @@ class CommandPipeline {
     bool append_out_ = false;
     std::string in_file_;
     std::string err_file_;
-    int background_;
+    bool background_ = false;
     void AddSimpleCommand(CommandInterface *simple_command);
 };
