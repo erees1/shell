@@ -9,7 +9,7 @@ I've only implemented a limited subset of functionality:
 - `<` to redirect input of one command to a file
 - `>>` to append output of one command to a file
 - `&` to run a command in the background. (`fg` to bring it back to the foreground not yet implemented)
-- `~` expands to $HOME
+- `~` expands to `$HOME`
 - `ctrl-c` sends SIGINT to the child processes
 
 Notable omissions:
