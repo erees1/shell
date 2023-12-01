@@ -120,8 +120,8 @@ int CommandPipeline::Execute() {
             if (!out_file_.empty()) {
                 if (append_out_) {
                     std::cout << "append out true" << std::endl;
-                    fdout = open(&out_file_[0],
-                                 O_WRONLY | O_CREAT | O_APPEND, 0666);
+                    fdout = open(&out_file_[0], O_WRONLY | O_CREAT | O_APPEND,
+                                 0666);
                 } else {
                     fdout =
                         open(&out_file_[0], O_WRONLY | O_CREAT | O_TRUNC, 0666);
