@@ -106,9 +106,9 @@ CommandPipeline::~CommandPipeline() {
 }
 
 int CommandPipeline::Execute() {
-    int fdin = dup(0);      // File descriptor for input of the next command
-    int next_fdin = dup(0); // File descriptor for input of the next command
-    int fdout = dup(1);     // File descriptor for output of the next command
+    int fdin = 0;      // File descriptor for input of the next command
+    int next_fdin = 0; // File descriptor for input of the next command
+    int fdout = 1;     // File descriptor for output of the next command
 
     for (int i = 0; i < simple_commands_.size(); i++) {
         fdin = next_fdin;
