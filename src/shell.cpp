@@ -64,7 +64,6 @@ std::string Shell::ReadLine() {
             should_exit_from_read_ = false;
             buffer.clear();
             std::cin.clear();
-            std::cin.ignore();
             lexer_->Clear();
             break;
         } else if (std::cin.eof() &&
