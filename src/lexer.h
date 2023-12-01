@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+#include <ostream>
 #include <string>
 #include <vector>
 
@@ -49,7 +51,10 @@ class Lexer {
   public:
     void Lex(std::string line);
     std::vector<Token> tokens;
-    void Clear() { tokens.clear(); }
+    void Clear() {
+        std::cout << "clearing tokens" << std::endl;
+        tokens.clear();
+    }
 
   private:
     Token MatchToken(std::string token);

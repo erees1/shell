@@ -14,6 +14,7 @@ class CommandPipeline {
     int Parse(const std::vector<Token> &tokens);
     int Execute();
     ~CommandPipeline();
+    void SendSignal(int signal);
 
   private:
     std::vector<CommandInterface *> simple_commands_;
@@ -23,4 +24,6 @@ class CommandPipeline {
     std::string err_file_;
     bool background_ = false;
     void AddSimpleCommand(CommandInterface *simple_command);
+    std::vector<int> pids_;
+    std::vector<int> WaitOnChildren();
 };

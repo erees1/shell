@@ -1,5 +1,6 @@
 #include "pipeline.h"
 #include "loop.h"
+#include <csignal>
 #include <fcntl.h> // for open
 #include <iostream>
 #include <string>
@@ -105,10 +106,9 @@ CommandPipeline::~CommandPipeline() {
 }
 
 int CommandPipeline::Execute() {
-    int fdin = 0;      // File descriptor for input of the next command
-    int next_fdin = 0; // File descriptor for input of the next command
-    int fdout = 1;     // File descriptor for output of the next command
-    std::vector<int> pids;
+    int fdin = dup(0);      // File descriptor for input of the next command
+    int next_fdin = dup(0); // File descriptor for input of the next command
+    int fdout = dup(1);     // File descriptor for output of the next command
 
     for (int i = 0; i < simple_commands_.size(); i++) {
         fdin = next_fdin;
@@ -140,18 +140,44 @@ int CommandPipeline::Execute() {
         }
         int ret = simple_command->Execute(fdin, fdout);
         if (ret != 0) {
-            pids.push_back(ret);
+            pids_.push_back(ret);
         }
 
     } // for
 
     if (!background_) {
         // Wait for last process to finish
-        for (int pid : pids) {
-            waitpid(pid, NULL, 0);
-        }
+        std::cout << "about to wait " << background_ << std::endl;
+        WaitOnChildren();
         // Wait for last process to finish
     }
+    pids_.clear();
 
     return 0;
 } // execute
+
+void CommandPipeline::SendSignal(int signal) {
+    if (pids_.empty()) {
+        return;
+    }
+    int pid = pids_.back();
+    std::cout << "Sending signal " << signal << " to pid " << pid << std::endl;
+    kill(pid, signal);
+    // I am not sure why but I need to wait here otherwise the child becomes a
+    // zombie despite waiting in execute when I ctrl-c
+    WaitOnChildren();
+}
+
+std::vector<int> CommandPipeline::WaitOnChildren() {
+    std::vector<int> ret_values;
+    for (int pid : pids_) {
+        int ret_code;
+        std::cout << "waiting for pid " << pid << std::endl;
+        waitpid(pid, &ret_code, 0);
+        std::cout << "done waiting for " << pid << ", ret code " << ret_code
+                  << std::endl;
+        ret_values.push_back(ret_code);
+    }
+    pids_.clear();
+    return ret_values;
+}
