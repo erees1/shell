@@ -22,15 +22,12 @@ void Shell::Loop() {
         std::cout << "shell> ";
         std::string line = ReadLine();
         lexer_->Clear();
-        std::cout << "lexer tokens" << std::endl;
-        std::cout << lexer_->tokens.size() << std::endl;
         lexer_->Lex(line);
         ParseTokensAndExecute(lexer_->tokens);
     }
 }
 
 void Shell::RegisterSignalHandlers() {
-    std::cout << "Registering signal handlers" << std::endl;
     // Register signal hander for SIGINT (ctrl-c).
     struct sigaction sigint_action;
     sigint_action.sa_handler = SigintHandler;
@@ -48,8 +45,6 @@ int Shell::ParseTokensAndExecute(const std::vector<Token> &tokens) {
         delete command_pipeline_;
     }
     command_pipeline_ = new CommandPipeline();
-    std::cout << "Executing command" << std::endl;
-    std::cout << "tokens[0]" << tokens[0].GetValue() << std::endl;
     int ret = command_pipeline_->Parse(tokens);
     if (ret != 0) {
         return ret;
@@ -64,10 +59,8 @@ std::string Shell::ReadLine() {
     should_exit_from_read_ = false;
     while (true) {
         c = static_cast<char>(std::cin.get());
-        std::cout << "c: " << c << std::endl;
 
         if (should_exit_from_read_) {
-            std::cout << "should_exit_from_read_ is True" << std::endl;
             should_exit_from_read_ = false;
             buffer.clear();
             std::cin.clear();
@@ -76,7 +69,6 @@ std::string Shell::ReadLine() {
             break;
         } else if (std::cin.eof() &&
                    std::cin.eof()) { // Check for EOF explicitly
-            std::cout << "eof" << std::endl;
             std::cin.clear();
             exit(0);
         } else if (c == '\n') {

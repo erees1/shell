@@ -59,7 +59,6 @@ int ForkingCommand::Execute(int fdin, int fdout) {
     if (ret == 0) {
         // child
         execvp(&filepath_[0], this->args_pointer_array());
-        std::cerr << "execvp failed" << std::endl;
         perror("shell");
         _exit(1);
     } else if (ret < 0) {

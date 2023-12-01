@@ -146,10 +146,7 @@ int CommandPipeline::Execute() {
     } // for
 
     if (!background_) {
-        // Wait for last process to finish
-        std::cout << "about to wait " << background_ << std::endl;
         WaitOnChildren();
-        // Wait for last process to finish
     }
     pids_.clear();
 
@@ -161,7 +158,6 @@ void CommandPipeline::SendSignal(int signal) {
         return;
     }
     int pid = pids_.back();
-    std::cout << "Sending signal " << signal << " to pid " << pid << std::endl;
     kill(pid, signal);
     // I am not sure why but I need to wait here otherwise the child becomes a
     // zombie despite waiting in execute when I ctrl-c
@@ -172,10 +168,7 @@ std::vector<int> CommandPipeline::WaitOnChildren() {
     std::vector<int> ret_values;
     for (int pid : pids_) {
         int ret_code;
-        std::cout << "waiting for pid " << pid << std::endl;
         waitpid(pid, &ret_code, 0);
-        std::cout << "done waiting for " << pid << ", ret code " << ret_code
-                  << std::endl;
         ret_values.push_back(ret_code);
     }
     pids_.clear();

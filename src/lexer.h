@@ -52,7 +52,6 @@ class Lexer {
     void Lex(std::string line);
     std::vector<Token> tokens;
     void Clear() {
-        std::cout << "clearing tokens" << std::endl;
         tokens.clear();
     }
 

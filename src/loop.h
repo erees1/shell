@@ -25,7 +25,6 @@ class Shell {
         }
     }
     void SetExitFromRead() {
-        std::cout << "Setting exit from read" << std::endl;
         should_exit_from_read_ = true;
     }
 
