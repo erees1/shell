@@ -1,5 +1,5 @@
 #include "pipeline.h"
-#include "loop.h"
+#include "shell.h"
 #include <csignal>
 #include <fcntl.h> // for open
 #include <iostream>
