@@ -42,7 +42,7 @@ class Shell {
     Shell &operator=(const Shell &) = delete;
     void RegisterSignalHandlers();
     Lexer *lexer_;
-    std::string ReadLine();
+    std::string Readline();
     int ParseTokensAndExecute(const std::vector<Token> &tokens);
     CommandPipeline *command_pipeline_ = nullptr;
     bool should_exit_from_read_ = false;

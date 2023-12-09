@@ -2,7 +2,8 @@
 #include <iostream>
 #include <string>
 
-void Lexer::Lex(std::string line) {
+std::vector<Token> Lexer::Lex(std::string line) {
+    Clear();
     std::string buffer;
     char c;
 
@@ -10,7 +11,7 @@ void Lexer::Lex(std::string line) {
         c = line[i];
         if (c == ' ') {
             Token token = MatchToken(buffer);
-            tokens.push_back(token);
+            tokens_.push_back(token);
             buffer = "";
         } else {
             buffer += c;
@@ -19,8 +20,9 @@ void Lexer::Lex(std::string line) {
     // Push the last token
     if (buffer != "") {
         Token token = MatchToken(buffer);
-        tokens.push_back(token);
+        tokens_.push_back(token);
     }
+    return tokens_;
 }
 
 Token Lexer::MatchToken(std::string token) {
@@ -40,4 +42,3 @@ Token Lexer::MatchToken(std::string token) {
         return Token(Token::Type::WORD, token);
     }
 }
-

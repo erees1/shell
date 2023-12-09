@@ -20,10 +20,7 @@ void Shell::Loop() {
     while (true) {
         // sleep for 1 second
         std::cout << "shell> ";
-        std::string line = ReadLine();
-        lexer_->Clear();
-        lexer_->Lex(line);
-        ParseTokensAndExecute(lexer_->tokens);
+        ParseTokensAndExecute(lexer_->Lex(Readline()));
     }
 }
 
@@ -52,7 +49,7 @@ int Shell::ParseTokensAndExecute(const std::vector<Token> &tokens) {
     return command_pipeline_->Execute();
 };
 
-std::string Shell::ReadLine() {
+std::string Shell::Readline() {
     std::string buffer;
     char c;
 
@@ -64,7 +61,6 @@ std::string Shell::ReadLine() {
             should_exit_from_read_ = false;
             buffer.clear();
             std::cin.clear();
-            lexer_->Clear();
             break;
         } else if (std::cin.eof() &&
                    std::cin.eof()) { // Check for EOF explicitly
