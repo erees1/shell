@@ -11,13 +11,13 @@ I've only implemented a limited subset of functionality:
 - `&` to run a command in the background. (`fg` to bring it back to the foreground not yet implemented)
 - `~` expands to `$HOME`
 - `ctrl-c` sends SIGINT to the child processes
+- use `"` to escape spaces in arguments
 
 Notable omissions:
 - `;` to run multiple commands in sequence
 - `&&` and `||` to run commands conditionally
 - globbing
 - `*` and `?` expansion
-- quotes and escaping (everything is assumed to be whitespace separated)
 
 
 Quit with `^D`.

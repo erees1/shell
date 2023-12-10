@@ -14,9 +14,8 @@ void CommandPipeline::AddSimpleCommand(CommandInterface *simple_command) {
 
 int CheckToken(const std::vector<Token> &tokens, int i) {
     if (i >= tokens.size()) {
-        std::cerr << "syntax error: missing argument after redirect"
-                  << std::endl;
-        return -1; // or some other error code
+        Error("syntax error: missing argument after redirect");
+        return -1;
     }
     return 1;
 }
@@ -40,8 +39,7 @@ int CommandPipeline::Parse(const std::vector<Token> &tokens) {
             if (token.GetValue().find("~") != std::string::npos) {
                 std::string home = getenv("HOME");
                 std::string original = token.GetValue();
-                value =
-                    original.replace(original.find("~"), 1, home);
+                value = original.replace(original.find("~"), 1, home);
             }
             int ret = current_command->AddArgument(value);
             if (ret != 0) {
@@ -57,7 +55,7 @@ int CommandPipeline::Parse(const std::vector<Token> &tokens) {
             in_file_ = tokens[i + 1].GetValue();
             // only allow this for the first command
             if (simple_commands_.size() > 1) {
-                std::cerr << "ambiguous input redirect" << std::endl;
+                Error("ambiguous input redirect");
                 return -1;
             }
             i++; // Skip the next word
@@ -86,7 +84,7 @@ int CommandPipeline::Parse(const std::vector<Token> &tokens) {
         }
         case Token::Type::PIPE: {
             if (current_command == nullptr) {
-                std::cerr << "invalid syntax" << std::endl;
+                Error("invalid syntax");
                 return -1;
             }
             current_command = nullptr;
@@ -94,7 +92,7 @@ int CommandPipeline::Parse(const std::vector<Token> &tokens) {
         }
         case Token::Type::CD: {
             if (current_command != nullptr) {
-                std::cerr << "invalid syntax" << std::endl;
+                Error("invalid syntax");
                 return -1;
             }
             current_command = new CdCommand();

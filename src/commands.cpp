@@ -1,4 +1,5 @@
 #include "commands.h"
+#include "shell.h"
 #include <iostream>
 #include <sys/fcntl.h>
 #include <sys/stat.h>
@@ -85,7 +86,7 @@ bool IsDir(std::string dir) {
 
 int CdCommand::AddArgument(std::string argument) {
     if (!argument_.empty()) {
-        std::cerr << "cd: expected either 0 or 1 argument" << std::endl;
+        Error("cd: expected either 0 or 1 arguments");
         return 1;
     } else {
         argument_ = argument;
@@ -100,7 +101,7 @@ int CdCommand::Execute(int fdin, int fdout) {
         ret = chdir(getenv("HOME"));
     } else {
         if (!IsDir(argument_)) {
-            std::cerr << "cd: no such directory: " << argument_ << std::endl;
+            Error("cd: no such directory: " + argument_);
             return 1;
         }
         ret = chdir(&argument_[0]);

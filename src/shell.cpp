@@ -8,6 +8,8 @@
 // Shell is a singleton class
 Shell *Shell::instance_ = nullptr;
 
+void Error(std::string msg) { std::cerr << msg << std::endl; }
+
 void SigintHandler(int sig) {
     std::cout << std::endl;
     Shell *shell = Shell::GetInstance();
@@ -20,7 +22,9 @@ void Shell::Loop() {
     while (true) {
         // sleep for 1 second
         std::cout << "shell> ";
-        ParseTokensAndExecute(lexer_->Lex(Readline()));
+        Lexer lexer = Lexer(Readline());
+        std::vector<Token> tokens = lexer.ScanTokens();
+        ParseTokensAndExecute(tokens);
     }
 }
 

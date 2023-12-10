@@ -24,15 +24,12 @@ class Shell {
             command_pipeline_->SendSignal(SIGINT);
         }
     }
-    void SetExitFromRead() {
-        should_exit_from_read_ = true;
-    }
+    void SetExitFromRead() { should_exit_from_read_ = true; }
 
   private:
     static Shell *instance_;
-    Shell() { lexer_ = new Lexer(); }
+    Shell(){};
     ~Shell() {
-        delete lexer_;
         if (command_pipeline_ != nullptr) {
             delete command_pipeline_;
         }
@@ -47,3 +44,5 @@ class Shell {
     CommandPipeline *command_pipeline_ = nullptr;
     bool should_exit_from_read_ = false;
 };
+
+void Error(std::string msg);
