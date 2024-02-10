@@ -12,6 +12,7 @@ I've only implemented a limited subset of functionality:
 - `~` expands to `$HOME`
 - `ctrl-c` sends SIGINT to the child processes
 - use `"` to escape spaces in arguments
+- Quit with `^D`.
 
 Notable omissions:
 - `;` to run multiple commands in sequence
@@ -19,9 +20,7 @@ Notable omissions:
 - globbing
 - `*` and `?` expansion
 
-
-Quit with `^D`.
-
+---
 
 To compile
 ```bash
